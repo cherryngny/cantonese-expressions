@@ -52,6 +52,34 @@
             margin: 0;
         }
 
+        /* Mode Selector Tabs */
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            width: 100%;
+            max-width: 550px;
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #CBD5E1;
+            background: #E2E8F0;
+            color: #475569;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
         /* Screens & Modals */
         .card {
             background: var(--card-bg);
@@ -127,7 +155,7 @@
             color: #475569;
         }
 
-        /* Speaker Audio Button */
+        /* Level 1 Specific Components */
         .speaker-btn {
             background: #3B82F6;
             color: white;
@@ -149,7 +177,6 @@
             transform: scale(0.95);
         }
 
-        /* Draggable Boy Token Container */
         .boy-container {
             height: 75px;
             display: flex;
@@ -176,7 +203,6 @@
             transform: scale(1.1);
         }
 
-        /* 4 Option Pictures Grid */
         .options-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -211,6 +237,80 @@
             pointer-events: none;
         }
 
+        /* Level 2 Specific Components */
+        .level2-picture-box {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 16px auto;
+            border: 3px solid #E2E8F0;
+            border-radius: 16px;
+            padding: 8px;
+            background: #F8FAFC;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .level2-picture-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .audio-choices-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .audio-choice-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #F1F5F9;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .audio-choice-card:active {
+            transform: scale(0.98);
+        }
+
+        .audio-choice-card.playing {
+            border-color: var(--primary);
+            background: #EFF6FF;
+        }
+
+        .play-sub-btn {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .select-choice-btn {
+            flex-grow: 1;
+            background: white;
+            border: 1px solid #CBD5E1;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--text);
+            text-align: center;
+        }
+
         /* Feedback Modals */
         .overlay {
             position: fixed;
@@ -241,13 +341,8 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        .feedback-box.correct {
-            border: 6px solid var(--secondary);
-        }
-
-        .feedback-box.incorrect {
-            border: 6px solid var(--danger);
-        }
+        .feedback-box.correct { border: 6px solid var(--secondary); }
+        .feedback-box.incorrect { border: 6px solid var(--danger); }
 
         .feedback-title {
             font-size: 1.3rem;
@@ -309,6 +404,11 @@
     </header>
 
     <div id="setup-screen" class="card">
+        <div class="mode-selector">
+            <button id="tab-lvl1" class="mode-tab active" onclick="switchLevel(1)">關卡 1: 拖拽圖片<br>Lvl 1: Drag to Picture</button>
+            <button id="tab-lvl2" class="mode-tab" onclick="switchLevel(2)">關卡 2: 聽音選詞<br>Lvl 2: Select Audio</button>
+        </div>
+
         <h2 style="margin: 0 0 4px 0; font-size: 1.15rem;">選擇 2 至 5 個學習目標</h2>
         <p class="subtitle">Select 2 to 5 targets for this round</p>
         
@@ -323,15 +423,25 @@
             <span>目標 Targets: <span id="target-count-info">0</span></span>
         </div>
 
-        <button class="speaker-btn" onclick="playTargetAudio()">
-            🔊 播放語音 Listen Audio
-        </button>
+        <div id="level1-container">
+            <button class="speaker-btn" onclick="playTargetAudio()">
+                🔊 播放語音 Listen Audio
+            </button>
 
-        <div class="boy-container" id="boy-home">
-            <img id="boy-token" class="boy-icon" src="xxx_boy.png" alt="Boy Icon" draggable="true">
+            <div class="boy-container" id="boy-home">
+                <img id="boy-token" class="boy-icon" src="xxx_boy.png" alt="Boy Icon" draggable="true">
+            </div>
+
+            <div class="options-grid" id="options-container"></div>
         </div>
 
-        <div class="options-grid" id="options-container"></div>
+        <div id="level2-container" class="hidden">
+            <div class="level2-picture-box">
+                <img id="level2-target-img" src="" alt="Target Expression Picture">
+            </div>
+
+            <div class="audio-choices-list" id="audio-choices-container"></div>
+        </div>
     </div>
 
     <div id="feedback-modal" class="overlay hidden">
@@ -352,7 +462,6 @@
     </div>
 
     <script>
-        // Target Dataset
         const ALL_TARGETS = [
             { id: 'drink_water',   cantonese: '飲水', jyutping: 'jam2 seoi2', english: 'Drink water',          img: 'xxx_drink_water.png',   audio: 'audio_a8f1.mp3' },
             { id: 'eat_food',      cantonese: '食嘢', jyutping: 'sik6 je5',   english: 'Eating',               img: 'xxx_eat_food.png',      audio: 'audio_b3c2.mp3' },
@@ -368,48 +477,36 @@
             { id: 'play_toys',     cantonese: '玩玩具', jyutping: 'waan2 wun6 geoi6', english: 'Playing toys', img: 'xxx_play_toys.png',     audio: 'audio_p9k3.mp3' }
         ];
 
-        // Sound Effects Audio Generators using Web Audio API (Bingo & Didi)
+        // Synthesizer for SFX
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playBingoSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
-            
             const osc1 = audioCtx.createOscillator();
             const osc2 = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
 
-            osc1.type = 'sine';
-            osc2.type = 'sine';
-
+            osc1.type = 'sine'; osc2.type = 'sine';
             osc1.frequency.setValueAtTime(523.25, now);
             osc1.frequency.setValueAtTime(659.25, now + 0.12);
             osc1.frequency.setValueAtTime(783.99, now + 0.24);
-
             osc2.frequency.setValueAtTime(1046.50, now + 0.24);
 
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
 
-            osc1.connect(gain);
-            osc2.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc1.start(now);
-            osc2.start(now);
-            osc1.stop(now + 0.6);
-            osc2.stop(now + 0.6);
+            osc1.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination);
+            osc1.start(now); osc2.start(now); osc1.stop(now + 0.6); osc2.stop(now + 0.6);
         }
 
         function playDidiSound() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
-
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
 
             osc.type = 'sawtooth';
-            
             osc.frequency.setValueAtTime(180, now);
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.setValueAtTime(0.01, now + 0.1);
@@ -418,11 +515,8 @@
             gain.gain.setValueAtTime(0.2, now + 0.15);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
 
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start(now);
-            osc.stop(now + 0.35);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 0.35);
         }
 
         function playAudioFile(audioFilename) {
@@ -432,7 +526,8 @@
             });
         }
 
-        // Game State Variables
+        // State Variables
+        let currentLevel = 1;
         let selectedTargets = [];
         let trialsSequence = [];
         let currentTrialIndex = 0;
@@ -445,6 +540,12 @@
             renderSetupGrid();
             setupDragAndDropEvents();
         };
+
+        function switchLevel(lvl) {
+            currentLevel = lvl;
+            document.getElementById('tab-lvl1').classList.toggle('active', lvl === 1);
+            document.getElementById('tab-lvl2').classList.toggle('active', lvl === 2);
+        }
 
         function renderSetupGrid() {
             const container = document.getElementById('target-options');
@@ -501,6 +602,14 @@
             document.getElementById('game-screen').classList.remove('hidden');
             document.getElementById('target-count-info').innerText = selectedTargets.length;
 
+            if (currentLevel === 1) {
+                document.getElementById('level1-container').classList.remove('hidden');
+                document.getElementById('level2-container').classList.add('hidden');
+            } else {
+                document.getElementById('level1-container').classList.add('hidden');
+                document.getElementById('level2-container').classList.remove('hidden');
+            }
+
             loadTrial();
         }
 
@@ -509,19 +618,28 @@
             currentTarget = trialsSequence[currentTrialIndex];
             document.getElementById('trial-count').innerText = currentTrialIndex + 1;
 
-            const distractorPool = ALL_TARGETS.filter(t => t.id !== currentTarget.id);
-            const shuffledDistractors = shuffleArray(distractorPool).slice(0, 3);
-            
-            currentOptions = shuffleArray([currentTarget, ...shuffledDistractors]);
+            if (currentLevel === 1) {
+                // Level 1: 1 Target Audio + 4 Options Grid
+                const distractorPool = ALL_TARGETS.filter(t => t.id !== currentTarget.id);
+                const shuffledDistractors = shuffleArray(distractorPool).slice(0, 3);
+                currentOptions = shuffleArray([currentTarget, ...shuffledDistractors]);
 
-            renderOptionsGrid();
-            resetBoyToken();
-            
-            setTimeout(() => {
-                playTargetAudio();
-            }, 300);
+                renderOptionsGrid();
+                resetBoyToken();
+                setTimeout(() => playTargetAudio(), 300);
+            } else {
+                // Level 2: 1 Target Picture + 3 Audio Choices
+                document.getElementById('level2-target-img').src = currentTarget.img;
+                
+                const distractorPool = ALL_TARGETS.filter(t => t.id !== currentTarget.id);
+                const shuffledDistractors = shuffleArray(distractorPool).slice(0, 2);
+                currentOptions = shuffleArray([currentTarget, ...shuffledDistractors]);
+
+                renderAudioChoices();
+            }
         }
 
+        /* --- Level 1 Rendering --- */
         function renderOptionsGrid() {
             const container = document.getElementById('options-container');
             container.innerHTML = '';
@@ -534,16 +652,11 @@
 
                 card.innerHTML = `<img src="${option.img}" alt="Option Image">`;
 
-                // HTML5 Drag & Drop listeners for Desktop
                 card.addEventListener('dragover', (e) => {
                     e.preventDefault();
                     card.classList.add('drag-over');
                 });
-
-                card.addEventListener('dragleave', () => {
-                    card.classList.remove('drag-over');
-                });
-
+                card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
                 card.addEventListener('drop', (e) => {
                     e.preventDefault();
                     card.classList.remove('drag-over');
@@ -551,6 +664,25 @@
                 });
 
                 container.appendChild(card);
+            });
+        }
+
+        /* --- Level 2 Rendering --- */
+        function renderAudioChoices() {
+            const container = document.getElementById('audio-choices-container');
+            container.innerHTML = '';
+
+            currentOptions.forEach((option, idx) => {
+                const choiceCard = document.createElement('div');
+                choiceCard.className = 'audio-choice-card';
+
+                choiceCard.innerHTML = `
+                    <button class="play-sub-btn" onclick="event.stopPropagation(); playAudioFile('${option.audio}')">🔊</button>
+                    <div class="select-choice-btn">語音 Option ${idx + 1}</div>
+                `;
+
+                choiceCard.onclick = () => handleOptionSelection(option);
+                container.appendChild(choiceCard);
             });
         }
 
@@ -574,7 +706,6 @@
             attemptCount++;
 
             if (selectedOption.id === currentTarget.id) {
-                // --- CORRECT ANSWER ---
                 playBingoSound();
                 showFeedbackModal({
                     isCorrect: true,
@@ -586,7 +717,6 @@
                     onProceed: () => advanceTrial()
                 });
             } else {
-                // --- INCORRECT ANSWER ---
                 playDidiSound();
 
                 if (attemptCount === 1) {
@@ -598,8 +728,10 @@
                         sublabel: selectedOption.english,
                         audioToPlay: selectedOption.audio,
                         onProceed: () => {
-                            resetBoyToken();
-                            playTargetAudio();
+                            if (currentLevel === 1) {
+                                resetBoyToken();
+                                playTargetAudio();
+                            }
                         }
                     });
                 } else {
@@ -629,9 +761,7 @@
             pendingAction = onProceed;
             modal.classList.remove('hidden');
 
-            setTimeout(() => {
-                playAudioFile(audioToPlay);
-            }, 200);
+            setTimeout(() => playAudioFile(audioToPlay), 200);
         }
 
         function handleFeedbackProceed() {
@@ -684,12 +814,10 @@
         function setupDragAndDropEvents() {
             const boy = document.getElementById('boy-token');
 
-            // Desktop Drag Start
             boy.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('text/plain', 'boy');
             });
 
-            // Touch Screen Events
             boy.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 const touch = e.touches[0];
@@ -703,7 +831,6 @@
                 const touch = e.touches[0];
                 updateTouchPosition(touch);
 
-                // Detect card underneath current touch coordinate
                 boy.style.visibility = 'hidden';
                 const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
                 boy.style.visibility = 'visible';
