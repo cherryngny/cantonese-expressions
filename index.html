@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>廣東話日常表達練習 Cantonese Daily Expressions Practice</title>
-    <!-- canvas-confetti for celebrating round completion -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         :root {
@@ -34,6 +33,12 @@
             align-items: center;
             min-height: 100vh;
             touch-action: manipulation;
+            overflow-x: hidden;
+        }
+
+        body.no-scroll {
+            overflow: hidden;
+            touch-action: none;
         }
 
         header {
@@ -103,7 +108,7 @@
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             gap: 10px;
             margin: 16px 0;
-            max-height: 40vh;
+            max-height: 50vh;
             overflow-y: auto;
             padding: 4px;
         }
@@ -191,17 +196,40 @@
         }
 
         .boy-icon {
-            width: 60px;
-            height: 60px;
+            width: 65px;
+            height: 65px;
             cursor: grab;
-            z-index: 10;
+            z-index: 100;
             touch-action: none;
-            transition: transform 0.1s ease;
+            will-change: transform;
+            transition: transform 0.05s linear, box-shadow 0.2s;
+            border-radius: 50%;
         }
 
-        .boy-icon:active {
+        .boy-icon.dragging {
             cursor: grabbing;
-            transform: scale(1.1);
+            transform: scale(1.2);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+            filter: drop-shadow(0px 8px 12px rgba(0, 0, 0, 0.25));
+        }
+
+        /* Trajectory Dots */
+        .trajectory-dot {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            background: #3B82F6;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 90;
+            opacity: 0.7;
+            animation: fadeOutTrail 0.4s forwards ease-out;
+        }
+
+        @keyframes fadeOutTrail {
+            0% { transform: scale(1); opacity: 0.7; }
+            100% { transform: scale(0.2); opacity: 0; }
         }
 
         .options-grid {
@@ -227,7 +255,8 @@
         .option-card.drag-over {
             border-color: var(--primary);
             background-color: #EFF6FF;
-            transform: scale(1.03);
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(37, 99, 235, 0.3);
         }
 
         .option-card img {
@@ -316,7 +345,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 200;
         }
 
         .feedback-box {
@@ -374,19 +403,52 @@
             background: #F8FAFC;
             border: 2px solid #E2E8F0;
             border-radius: 12px;
-            padding: 12px;
+            padding: 14px;
             margin: 16px 0;
             text-align: left;
         }
 
         .tracker-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             font-weight: bold;
             font-size: 0.95rem;
             color: var(--primary);
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Student Input Fields */
+        .user-info-fields {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #64748B;
+        }
+
+        .input-group input {
+            padding: 8px 10px;
+            border: 1px solid #CBD5E1;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            user-select: text;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
         }
 
         .stats-grid {
@@ -418,12 +480,12 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.8rem;
-            margin-top: 8px;
+            margin-top: 10px;
         }
 
         .target-stats-table th, .target-stats-table td {
             border: 1px solid #E2E8F0;
-            padding: 4px 6px;
+            padding: 6px 8px;
             text-align: center;
         }
 
@@ -459,9 +521,7 @@
         <p class="subtitle">Cantonese Daily Expressions Practice</p>
     </header>
 
-    <!-- SETUP SCREEN -->
     <div id="setup-screen" class="card">
-        <!-- Level Selection Tabs -->
         <div class="mode-selector">
             <button id="tab-lvl1" class="mode-tab active" onclick="switchLevel(1)">關卡 1: 拖拽圖片<br>Lvl 1: Drag to Picture</button>
             <button id="tab-lvl2" class="mode-tab" onclick="switchLevel(2)">關卡 2: 聽音選詞<br>Lvl 2: Select Audio</button>
@@ -473,48 +533,26 @@
         <div class="selection-grid" id="target-options"></div>
 
         <button id="start-btn" class="btn" disabled onclick="startGame()">開始遊戲 Start Round (10 Trials)</button>
-
-        <!-- Data Tracker Summary in Setup -->
-        <div class="tracker-panel">
-            <div class="tracker-header">
-                <span>📊 學習數據總覽 Data Tracker</span>
-                <button onclick="clearTrackedData()" style="font-size:0.75rem; color:var(--danger); background:none; border:none; cursor:pointer;">Clear Data</button>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="total-rounds-stat">0</div>
-                    <div class="stat-label">完成輪數 Rounds</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="overall-acc-stat">0%</div>
-                    <div class="stat-label">首試正確率 1st Try Acc.</div>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- GAMEPLAY SCREEN -->
     <div id="game-screen" class="card hidden">
         <div class="status-bar">
             <span>進度 Trial: <span id="trial-count">1</span> / 10</span>
             <span>目標 Targets: <span id="target-count-info">0</span></span>
         </div>
 
-        <!-- LEVEL 1 CONTAINER -->
         <div id="level1-container">
             <button class="speaker-btn" onclick="playTargetAudio()">
                 🔊 播放語音 Listen Audio
             </button>
 
-            <!-- Draggable Boy Token Area -->
             <div class="boy-container" id="boy-home">
-                <img id="boy-token" class="boy-icon" src="boy.png" alt="Boy Icon" draggable="true">
+                <img id="boy-token" class="boy-icon" src="boy.png" alt="Boy Icon">
             </div>
 
             <div class="options-grid" id="options-container"></div>
         </div>
 
-        <!-- LEVEL 2 CONTAINER -->
         <div id="level2-container" class="hidden">
             <div class="level2-picture-box">
                 <img id="level2-target-img" src="" alt="Target Expression Picture">
@@ -524,7 +562,6 @@
         </div>
     </div>
 
-    <!-- FEEDBACK OVERLAY -->
     <div id="feedback-modal" class="overlay hidden">
         <div id="feedback-box" class="feedback-box">
             <div id="feedback-title" class="feedback-title"></div>
@@ -535,24 +572,34 @@
         </div>
     </div>
 
-    <!-- SUMMARY SCREEN -->
     <div id="summary-screen" class="card hidden">
         <h2 style="color: var(--secondary); font-size: 1.4rem; margin-top: 0; margin-bottom: 6px;">🎉 完成本輪練習！</h2>
         <p style="font-size: 1.1rem; font-weight: bold; margin-top: 0;">Round Completed!</p>
 
-        <!-- Round Data Summary -->
         <div class="tracker-panel">
             <div class="tracker-header">
-                <span>📈 本輪數據報告 Round Report</span>
+                <span>📊 學習數據報告 Data Tracker</span>
             </div>
+
+            <div class="user-info-fields">
+                <div class="input-group">
+                    <label for="player-name">學生姓名 Name:</label>
+                    <input type="text" id="player-name" placeholder="輸入姓名 Enter name">
+                </div>
+                <div class="input-group">
+                    <label for="player-date">日期 Date:</label>
+                    <input type="date" id="player-date">
+                </div>
+            </div>
+
             <div class="stats-grid" style="margin-bottom: 8px;">
                 <div class="stat-card">
                     <div class="stat-value" id="round-first-acc">0%</div>
-                    <div class="stat-label">首次嘗試正確率</div>
+                    <div class="stat-label">首次嘗試正確率 1st Try Acc.</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="round-avg-time">0s</div>
-                    <div class="stat-label">平均反應時間</div>
+                    <div class="stat-label">平均反應時間 Avg Time</div>
                 </div>
             </div>
 
@@ -650,12 +697,10 @@
         // Data Tracker Variables
         let trialStartTime = 0;
         let roundLogs = [];
-        let historicalLogs = JSON.parse(localStorage.getItem('cantonese_game_logs') || '[]');
 
         window.onload = () => {
             renderSetupGrid();
-            setupDragAndDropEvents();
-            updateOverallTrackerUI();
+            setupInteractiveDragAndDrop();
         };
 
         function switchLevel(lvl) {
@@ -769,18 +814,6 @@
                 card.dataset.index = idx;
 
                 card.innerHTML = `<img src="${option.img}" alt="Option Image">`;
-
-                card.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    card.classList.add('drag-over');
-                });
-                card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
-                card.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    card.classList.remove('drag-over');
-                    handleOptionSelection(option);
-                });
-
                 container.appendChild(card);
             });
         }
@@ -807,11 +840,15 @@
         function resetBoyToken() {
             const boy = document.getElementById('boy-token');
             const home = document.getElementById('boy-home');
+            boy.classList.remove('dragging');
             boy.style.position = 'relative';
-            boy.style.left = '';
-            boy.style.top = '';
-            boy.style.zIndex = '10';
-            home.appendChild(boy);
+            boy.style.left = '0px';
+            boy.style.top = '0px';
+            boy.style.transform = '';
+            boy.style.zIndex = '100';
+            if (boy.parentNode !== home) {
+                home.appendChild(boy);
+            }
         }
 
         function playTargetAudio() {
@@ -928,16 +965,11 @@
             document.getElementById('game-screen').classList.add('hidden');
             document.getElementById('summary-screen').classList.remove('hidden');
 
-            // Save round logs to local storage
-            historicalLogs.push({
-                timestamp: new Date().toISOString(),
-                level: currentLevel,
-                logs: roundLogs
-            });
-            localStorage.setItem('cantonese_game_logs', JSON.stringify(historicalLogs));
+            // Default to today's date in YYYY-MM-DD
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('player-date').value = today;
 
             renderRoundSummaryTracker();
-            updateOverallTrackerUI();
 
             if (typeof confetti === 'function') {
                 confetti({
@@ -980,34 +1012,6 @@
             });
         }
 
-        function updateOverallTrackerUI() {
-            const totalRounds = historicalLogs.length;
-            document.getElementById('total-rounds-stat').innerText = totalRounds;
-
-            if (totalRounds > 0) {
-                let totalTrials = 0;
-                let totalFirstTry = 0;
-                historicalLogs.forEach(r => {
-                    r.logs.forEach(l => {
-                        totalTrials++;
-                        if (l.result === '1st_try') totalFirstTry++;
-                    });
-                });
-                const acc = Math.round((totalFirstTry / totalTrials) * 100);
-                document.getElementById('overall-acc-stat').innerText = `${acc}%`;
-            } else {
-                document.getElementById('overall-acc-stat').innerText = `0%`;
-            }
-        }
-
-        function clearTrackedData() {
-            if (confirm("確定要清除所有學習紀錄嗎？\nAre you sure you want to clear all recorded data?")) {
-                localStorage.removeItem('cantonese_game_logs');
-                historicalLogs = [];
-                updateOverallTrackerUI();
-            }
-        }
-
         function resetToSetup() {
             selectedTargets = [];
             document.querySelectorAll('.target-card').forEach(c => c.classList.remove('selected'));
@@ -1021,31 +1025,30 @@
             return array.slice().sort(() => Math.random() - 0.5);
         }
 
-        /* --- Touch & Mobile Drag-and-Drop Implementation --- */
+        /* --- Smooth Trajectory Drag & Drop Engine --- */
         let activeCard = null;
+        let isDragging = false;
 
-        function setupDragAndDropEvents() {
+        function setupInteractiveDragAndDrop() {
             const boy = document.getElementById('boy-token');
 
-            boy.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', 'boy');
-            });
-
-            boy.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const touch = e.touches[0];
+            const startDrag = (clientX, clientY) => {
+                isDragging = true;
+                boy.classList.add('dragging');
+                document.body.classList.add('no-scroll');
                 boy.style.position = 'fixed';
                 boy.style.zIndex = '1000';
-                updateTouchPosition(touch);
-            }, { passive: false });
+                moveAt(clientX, clientY);
+            };
 
-            boy.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                updateTouchPosition(touch);
+            const moveDrag = (clientX, clientY) => {
+                if (!isDragging) return;
+                moveAt(clientX, clientY);
+                createTrajectoryDot(clientX, clientY);
 
+                // Detection of element under cursor/finger
                 boy.style.visibility = 'hidden';
-                const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const elemBelow = document.elementFromPoint(clientX, clientY);
                 boy.style.visibility = 'visible';
 
                 const card = elemBelow ? elemBelow.closest('.option-card') : null;
@@ -1055,9 +1058,14 @@
                     activeCard = card;
                     if (activeCard) activeCard.classList.add('drag-over');
                 }
-            }, { passive: false });
+            };
 
-            boy.addEventListener('touchend', (e) => {
+            const endDrag = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                boy.classList.remove('dragging');
+                document.body.classList.remove('no-scroll');
+
                 if (activeCard) {
                     activeCard.classList.remove('drag-over');
                     const targetOptionId = activeCard.dataset.optionId;
@@ -1069,13 +1077,67 @@
                 } else {
                     resetBoyToken();
                 }
-            });
-        }
+            };
 
-        function updateTouchPosition(touch) {
-            const boy = document.getElementById('boy-token');
-            boy.style.left = (touch.clientX - boy.offsetWidth / 2) + 'px';
-            boy.style.top = (touch.clientY - boy.offsetHeight / 2) + 'px';
+            const moveAt = (pageX, pageY) => {
+                // Offset vertically slightly (-25px) on touch so finger doesn't block icon
+                const offsetY = 25;
+                const width = boy.offsetWidth || 65;
+                const height = boy.offsetHeight || 65;
+                
+                // Screen boundaries clamp
+                const boundedX = Math.max(width / 2, Math.min(window.innerWidth - width / 2, pageX));
+                const boundedY = Math.max(height / 2, Math.min(window.innerHeight - height / 2, pageY - offsetY));
+
+                boy.style.left = `${boundedX - width / 2}px`;
+                boy.style.top = `${boundedY - height / 2}px`;
+            };
+
+            const createTrajectoryDot = (x, y) => {
+                const dot = document.createElement('div');
+                dot.className = 'trajectory-dot';
+                dot.style.left = `${x - 6}px`;
+                dot.style.top = `${y - 6}px`;
+                document.body.appendChild(dot);
+
+                setTimeout(() => {
+                    if (dot.parentNode) dot.parentNode.removeChild(dot);
+                }, 400);
+            };
+
+            // Touch Events (Mobile)
+            boy.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                startDrag(touch.clientX, touch.clientY);
+            }, { passive: false });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                moveDrag(touch.clientX, touch.clientY);
+            }, { passive: false });
+
+            window.addEventListener('touchend', (e) => {
+                endDrag();
+            });
+
+            // Mouse Events (Desktop fallback)
+            boy.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                startDrag(e.clientX, e.clientY);
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                moveDrag(e.clientX, e.clientY);
+            });
+
+            window.addEventListener('mouseup', () => {
+                endDrag();
+            });
         }
     </script>
 </body>
