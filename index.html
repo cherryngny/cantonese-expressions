@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>廣東話日常表達練習 Cantonese Daily Expressions Practice</title>
+    <!-- canvas-confetti for celebrating round completion -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         :root {
@@ -102,7 +103,7 @@
             grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
             gap: 10px;
             margin: 16px 0;
-            max-height: 50vh;
+            max-height: 40vh;
             overflow-y: auto;
             padding: 4px;
         }
@@ -177,7 +178,7 @@
             transform: scale(0.95);
         }
 
-        .-container {
+        .boy-container {
             height: 75px;
             display: flex;
             justify-content: center;
@@ -189,7 +190,7 @@
             position: relative;
         }
 
-        .-icon {
+        .boy-icon {
             width: 60px;
             height: 60px;
             cursor: grab;
@@ -198,7 +199,7 @@
             transition: transform 0.1s ease;
         }
 
-        .-icon:active {
+        .boy-icon:active {
             cursor: grabbing;
             transform: scale(1.1);
         }
@@ -279,23 +280,16 @@
             transform: scale(0.98);
         }
 
-        .audio-choice-card.playing {
-            border-color: var(--primary);
-            background: #EFF6FF;
-        }
-
         .play-sub-btn {
-            background: #3B82F6;
-            color: white;
-            border: none;
+            background: white;
+            border: 1px solid #CBD5E1;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
+            font-size: 1rem;
             cursor: pointer;
         }
 
@@ -375,6 +369,68 @@
             margin-bottom: 16px;
         }
 
+        /* Data Tracker Styling */
+        .tracker-panel {
+            background: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 12px;
+            margin: 16px 0;
+            text-align: left;
+        }
+
+        .tracker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748B;
+        }
+
+        .target-stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        .target-stats-table th, .target-stats-table td {
+            border: 1px solid #E2E8F0;
+            padding: 4px 6px;
+            text-align: center;
+        }
+
+        .target-stats-table th {
+            background: #F1F5F9;
+        }
+
         /* Action Buttons */
         .btn {
             background: var(--primary);
@@ -403,7 +459,9 @@
         <p class="subtitle">Cantonese Daily Expressions Practice</p>
     </header>
 
+    <!-- SETUP SCREEN -->
     <div id="setup-screen" class="card">
+        <!-- Level Selection Tabs -->
         <div class="mode-selector">
             <button id="tab-lvl1" class="mode-tab active" onclick="switchLevel(1)">關卡 1: 拖拽圖片<br>Lvl 1: Drag to Picture</button>
             <button id="tab-lvl2" class="mode-tab" onclick="switchLevel(2)">關卡 2: 聽音選詞<br>Lvl 2: Select Audio</button>
@@ -415,26 +473,48 @@
         <div class="selection-grid" id="target-options"></div>
 
         <button id="start-btn" class="btn" disabled onclick="startGame()">開始遊戲 Start Round (10 Trials)</button>
+
+        <!-- Data Tracker Summary in Setup -->
+        <div class="tracker-panel">
+            <div class="tracker-header">
+                <span>📊 學習數據總覽 Data Tracker</span>
+                <button onclick="clearTrackedData()" style="font-size:0.75rem; color:var(--danger); background:none; border:none; cursor:pointer;">Clear Data</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-rounds-stat">0</div>
+                    <div class="stat-label">完成輪數 Rounds</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="overall-acc-stat">0%</div>
+                    <div class="stat-label">首試正確率 1st Try Acc.</div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- GAMEPLAY SCREEN -->
     <div id="game-screen" class="card hidden">
         <div class="status-bar">
             <span>進度 Trial: <span id="trial-count">1</span> / 10</span>
             <span>目標 Targets: <span id="target-count-info">0</span></span>
         </div>
 
+        <!-- LEVEL 1 CONTAINER -->
         <div id="level1-container">
             <button class="speaker-btn" onclick="playTargetAudio()">
                 🔊 播放語音 Listen Audio
             </button>
 
-            <div class="-container" id="-home">
-                <img id="-token" class="-icon" src="boy.png" alt=" Icon" draggable="true">
+            <!-- Draggable Boy Token Area -->
+            <div class="boy-container" id="boy-home">
+                <img id="boy-token" class="boy-icon" src="boy.png" alt="Boy Icon" draggable="true">
             </div>
 
             <div class="options-grid" id="options-container"></div>
         </div>
 
+        <!-- LEVEL 2 CONTAINER -->
         <div id="level2-container" class="hidden">
             <div class="level2-picture-box">
                 <img id="level2-target-img" src="" alt="Target Expression Picture">
@@ -444,6 +524,7 @@
         </div>
     </div>
 
+    <!-- FEEDBACK OVERLAY -->
     <div id="feedback-modal" class="overlay hidden">
         <div id="feedback-box" class="feedback-box">
             <div id="feedback-title" class="feedback-title"></div>
@@ -454,27 +535,57 @@
         </div>
     </div>
 
+    <!-- SUMMARY SCREEN -->
     <div id="summary-screen" class="card hidden">
         <h2 style="color: var(--secondary); font-size: 1.4rem; margin-top: 0; margin-bottom: 6px;">🎉 完成本輪練習！</h2>
         <p style="font-size: 1.1rem; font-weight: bold; margin-top: 0;">Round Completed!</p>
-        <p class="subtitle" style="margin-bottom: 20px;">太棒了！繼續加油練習廣東話！<br>Great job practicing Cantonese expressions!</p>
+
+        <!-- Round Data Summary -->
+        <div class="tracker-panel">
+            <div class="tracker-header">
+                <span>📈 本輪數據報告 Round Report</span>
+            </div>
+            <div class="stats-grid" style="margin-bottom: 8px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="round-first-acc">0%</div>
+                    <div class="stat-label">首次嘗試正確率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="round-avg-time">0s</div>
+                    <div class="stat-label">平均反應時間</div>
+                </div>
+            </div>
+
+            <table class="target-stats-table">
+                <thead>
+                    <tr>
+                        <th>表達 Phrase</th>
+                        <th>1st Try</th>
+                        <th>2nd Try</th>
+                        <th>Incorrect</th>
+                    </tr>
+                </thead>
+                <tbody id="round-breakdown-body"></tbody>
+            </table>
+        </div>
+
         <button class="btn" onclick="resetToSetup()">再玩一次 Play Again</button>
     </div>
 
     <script>
         const ALL_TARGETS = [
             { id: 'drink_water',   cantonese: '飲水', jyutping: 'jam2 seoi2', english: 'Drink water',          img: '1.png',   audio: '飲水.mp3' },
-            { id: 'eat_food',      cantonese: '食嘢', jyutping: 'sik6 je5',   english: 'Eating',               img: '2.png',      audio: '食嘢.mp3' },
-            { id: 'sleep',         cantonese: '瞓覺', jyutping: 'fan3 gaau3', english: 'Sleeping',             img: '3.png',         audio: '瞓覺.mp3' },
-            { id: 'go_to_school',  cantonese: '返學', jyutping: 'faan1 hok6', english: 'Going to school',      img: '4.png',     audio: '翻學.mp3' },
-            { id: 'off_school',    cantonese: '放學', jyutping: 'fong3 hok6', english: 'Off from school',      img: '5.png',    audio: '放學.mp3' },
+            { id: 'eat_food',      cantonese: '食嘢', jyutping: 'sik6 je5',   english: 'Eating',               img: '2.png',   audio: '食嘢.mp3' },
+            { id: 'sleep',         cantonese: '瞓覺', jyutping: 'fan3 gaau3', english: 'Sleeping',             img: '3.png',   audio: '瞓覺.mp3' },
+            { id: 'go_to_school',  cantonese: '返學', jyutping: 'faan1 hok6', english: 'Going to school',      img: '4.png',   audio: '翻學.mp3' },
+            { id: 'off_school',    cantonese: '放學', jyutping: 'fong3 hok6', english: 'Off from school',      img: '5.png',   audio: '放學.mp3' },
             { id: 'carry_bag',     cantonese: '孭書包', jyutping: 'me1 syu1 baau1', english: 'Carrying school bag', img: '6.png',   audio: '孭書包.mp3' },
-            { id: 'go_toilet',     cantonese: '去廁所', jyutping: 'heoi3 ci3 so2', english: 'Going to toilet',    img: '7.png',    audio: '去廁所.mp3' },
-            { id: 'do_homework',   cantonese: '做功課', jyutping: 'zou6 gung1 fo3', english: 'Doing homework',    img: '8.png',     audio: '做功課.mp3' },
-            { id: 'queue_up',      cantonese: '排隊', jyutping: 'paai4 deoi2', english: 'Queuing up',          img: '9.png',      audio: '排隊.mp3' },
-            { id: 'take_bus',      cantonese: '搭巴士', jyutping: 'daap3 baa1 si2', english: 'Taking bus',        img: '10.png',      audio: '搭巴士.mp3' },
+            { id: 'go_toilet',     cantonese: '去廁所', jyutping: 'heoi3 ci3 so2', english: 'Going to toilet',    img: '7.png',   audio: '去廁所.mp3' },
+            { id: 'do_homework',   cantonese: '做功課', jyutping: 'zou6 gung1 fo3', english: 'Doing homework',    img: '8.png',   audio: '做功課.mp3' },
+            { id: 'queue_up',      cantonese: '排隊', jyutping: 'paai4 deoi2', english: 'Queuing up',          img: '9.png',   audio: '排隊.mp3' },
+            { id: 'take_bus',      cantonese: '搭巴士', jyutping: 'daap3 baa1 si2', english: 'Taking bus',        img: '10.png',  audio: '搭巴士.mp3' },
             { id: 'wear_clothes',  cantonese: '著衫', jyutping: 'zoek3 saam1', english: 'Wearing clothes',     img: '11.png',  audio: '著衫.mp3' },
-            { id: 'play_toys',     cantonese: '玩玩具', jyutping: 'waan2 wun6 geoi6', english: 'Playing toys', img: '12.png',     audio: '玩玩具.mp3' }
+            { id: 'play_toys',     cantonese: '玩玩具', jyutping: 'waan2 wun6 geoi6', english: 'Playing toys', img: '12.png',  audio: '玩玩具.mp3' }
         ];
 
         // Synthesizer for SFX
@@ -526,7 +637,7 @@
             });
         }
 
-        // State Variables
+        // Game State Variables
         let currentLevel = 1;
         let selectedTargets = [];
         let trialsSequence = [];
@@ -536,9 +647,15 @@
         let attemptCount = 0;
         let pendingAction = null;
 
+        // Data Tracker Variables
+        let trialStartTime = 0;
+        let roundLogs = [];
+        let historicalLogs = JSON.parse(localStorage.getItem('cantonese_game_logs') || '[]');
+
         window.onload = () => {
             renderSetupGrid();
             setupDragAndDropEvents();
+            updateOverallTrackerUI();
         };
 
         function switchLevel(lvl) {
@@ -590,6 +707,8 @@
             if (selectedTargets.length < 2 || selectedTargets.length > 5) return;
 
             trialsSequence = [];
+            roundLogs = [];
+
             for (let i = 0; i < 10; i++) {
                 const randomTarget = selectedTargets[Math.floor(Math.random() * selectedTargets.length)];
                 trialsSequence.push(randomTarget);
@@ -616,19 +735,18 @@
         function loadTrial() {
             attemptCount = 0;
             currentTarget = trialsSequence[currentTrialIndex];
+            trialStartTime = Date.now();
             document.getElementById('trial-count').innerText = currentTrialIndex + 1;
 
             if (currentLevel === 1) {
-                // Level 1: 1 Target Audio + 4 Options Grid
                 const distractorPool = ALL_TARGETS.filter(t => t.id !== currentTarget.id);
                 const shuffledDistractors = shuffleArray(distractorPool).slice(0, 3);
                 currentOptions = shuffleArray([currentTarget, ...shuffledDistractors]);
 
                 renderOptionsGrid();
-                resetToken();
+                resetBoyToken();
                 setTimeout(() => playTargetAudio(), 300);
             } else {
-                // Level 2: 1 Target Picture + 3 Audio Choices
                 document.getElementById('level2-target-img').src = currentTarget.img;
                 
                 const distractorPool = ALL_TARGETS.filter(t => t.id !== currentTarget.id);
@@ -686,14 +804,14 @@
             });
         }
 
-        function resetToken() {
-            const  = document.getElementById('-token');
-            const home = document.getElementById('-home');
-            .style.position = 'relative';
-            .style.left = '';
-            .style.top = '';
-            .style.zIndex = '10';
-            home.appendChild();
+        function resetBoyToken() {
+            const boy = document.getElementById('boy-token');
+            const home = document.getElementById('boy-home');
+            boy.style.position = 'relative';
+            boy.style.left = '';
+            boy.style.top = '';
+            boy.style.zIndex = '10';
+            home.appendChild(boy);
         }
 
         function playTargetAudio() {
@@ -704,9 +822,20 @@
 
         function handleOptionSelection(selectedOption) {
             attemptCount++;
+            const responseTime = (Date.now() - trialStartTime) / 1000;
 
             if (selectedOption.id === currentTarget.id) {
+                // Correct Choice
                 playBingoSound();
+
+                // Log Trial Data
+                logTrialData({
+                    targetId: currentTarget.id,
+                    targetName: currentTarget.cantonese,
+                    result: attemptCount === 1 ? '1st_try' : '2nd_try',
+                    responseTime: responseTime
+                });
+
                 showFeedbackModal({
                     isCorrect: true,
                     title: '✓ 答對了！ Bingo!',
@@ -717,6 +846,7 @@
                     onProceed: () => advanceTrial()
                 });
             } else {
+                // Incorrect Choice
                 playDidiSound();
 
                 if (attemptCount === 1) {
@@ -729,12 +859,20 @@
                         audioToPlay: selectedOption.audio,
                         onProceed: () => {
                             if (currentLevel === 1) {
-                                resetToken();
+                                resetBoyToken();
                                 playTargetAudio();
                             }
                         }
                     });
                 } else {
+                    // Log Failed Trial Data
+                    logTrialData({
+                        targetId: currentTarget.id,
+                        targetName: currentTarget.cantonese,
+                        result: 'incorrect',
+                        responseTime: responseTime
+                    });
+
                     showFeedbackModal({
                         isCorrect: false,
                         title: '✗ 正確答案： Correct Answer:',
@@ -746,6 +884,10 @@
                     });
                 }
             }
+        }
+
+        function logTrialData(data) {
+            roundLogs.push(data);
         }
 
         function showFeedbackModal({ isCorrect, title, img, label, sublabel, audioToPlay, onProceed }) {
@@ -786,12 +928,83 @@
             document.getElementById('game-screen').classList.add('hidden');
             document.getElementById('summary-screen').classList.remove('hidden');
 
+            // Save round logs to local storage
+            historicalLogs.push({
+                timestamp: new Date().toISOString(),
+                level: currentLevel,
+                logs: roundLogs
+            });
+            localStorage.setItem('cantonese_game_logs', JSON.stringify(historicalLogs));
+
+            renderRoundSummaryTracker();
+            updateOverallTrackerUI();
+
             if (typeof confetti === 'function') {
                 confetti({
                     particleCount: 120,
                     spread: 70,
                     origin: { y: 0.6 }
                 });
+            }
+        }
+
+        function renderRoundSummaryTracker() {
+            const firstTryCorrect = roundLogs.filter(l => l.result === '1st_try').length;
+            const avgTime = (roundLogs.reduce((acc, l) => acc + l.responseTime, 0) / roundLogs.length).toFixed(1);
+
+            document.getElementById('round-first-acc').innerText = `${Math.round((firstTryCorrect / 10) * 100)}%`;
+            document.getElementById('round-avg-time').innerText = `${avgTime}s`;
+
+            const tbody = document.getElementById('round-breakdown-body');
+            tbody.innerHTML = '';
+
+            const breakdown = {};
+            roundLogs.forEach(l => {
+                if (!breakdown[l.targetName]) {
+                    breakdown[l.targetName] = { first: 0, second: 0, fail: 0 };
+                }
+                if (l.result === '1st_try') breakdown[l.targetName].first++;
+                else if (l.result === '2nd_try') breakdown[l.targetName].second++;
+                else breakdown[l.targetName].fail++;
+            });
+
+            Object.keys(breakdown).forEach(name => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${name}</td>
+                    <td>${breakdown[name].first}</td>
+                    <td>${breakdown[name].second}</td>
+                    <td>${breakdown[name].fail}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateOverallTrackerUI() {
+            const totalRounds = historicalLogs.length;
+            document.getElementById('total-rounds-stat').innerText = totalRounds;
+
+            if (totalRounds > 0) {
+                let totalTrials = 0;
+                let totalFirstTry = 0;
+                historicalLogs.forEach(r => {
+                    r.logs.forEach(l => {
+                        totalTrials++;
+                        if (l.result === '1st_try') totalFirstTry++;
+                    });
+                });
+                const acc = Math.round((totalFirstTry / totalTrials) * 100);
+                document.getElementById('overall-acc-stat').innerText = `${acc}%`;
+            } else {
+                document.getElementById('overall-acc-stat').innerText = `0%`;
+            }
+        }
+
+        function clearTrackedData() {
+            if (confirm("確定要清除所有學習紀錄嗎？\nAre you sure you want to clear all recorded data?")) {
+                localStorage.removeItem('cantonese_game_logs');
+                historicalLogs = [];
+                updateOverallTrackerUI();
             }
         }
 
@@ -812,10 +1025,10 @@
         let activeCard = null;
 
         function setupDragAndDropEvents() {
-            const  = document.getElementById('-token');
+            const boy = document.getElementById('boy-token');
 
-            .addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', '');
+            boy.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', 'boy');
             });
 
             boy.addEventListener('touchstart', (e) => {
