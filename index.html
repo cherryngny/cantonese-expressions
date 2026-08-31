@@ -177,7 +177,7 @@
             transform: scale(0.95);
         }
 
-        .boy-container {
+        .-container {
             height: 75px;
             display: flex;
             justify-content: center;
@@ -189,7 +189,7 @@
             position: relative;
         }
 
-        .boy-icon {
+        .-icon {
             width: 60px;
             height: 60px;
             cursor: grab;
@@ -198,7 +198,7 @@
             transition: transform 0.1s ease;
         }
 
-        .boy-icon:active {
+        .-icon:active {
             cursor: grabbing;
             transform: scale(1.1);
         }
@@ -428,8 +428,8 @@
                 🔊 播放語音 Listen Audio
             </button>
 
-            <div class="boy-container" id="boy-home">
-                <img id="boy-token" class="boy-icon" src="boy.png" alt="Boy Icon" draggable="true">
+            <div class="-container" id="-home">
+                <img id="-token" class="-icon" src="boy.png" alt=" Icon" draggable="true">
             </div>
 
             <div class="options-grid" id="options-container"></div>
@@ -625,7 +625,7 @@
                 currentOptions = shuffleArray([currentTarget, ...shuffledDistractors]);
 
                 renderOptionsGrid();
-                resetBoyToken();
+                resetToken();
                 setTimeout(() => playTargetAudio(), 300);
             } else {
                 // Level 2: 1 Target Picture + 3 Audio Choices
@@ -686,14 +686,14 @@
             });
         }
 
-        function resetBoyToken() {
-            const boy = document.getElementById('boy-token');
-            const home = document.getElementById('boy-home');
-            boy.style.position = 'relative';
-            boy.style.left = '';
-            boy.style.top = '';
-            boy.style.zIndex = '10';
-            home.appendChild(boy);
+        function resetToken() {
+            const  = document.getElementById('-token');
+            const home = document.getElementById('-home');
+            .style.position = 'relative';
+            .style.left = '';
+            .style.top = '';
+            .style.zIndex = '10';
+            home.appendChild();
         }
 
         function playTargetAudio() {
@@ -729,7 +729,7 @@
                         audioToPlay: selectedOption.audio,
                         onProceed: () => {
                             if (currentLevel === 1) {
-                                resetBoyToken();
+                                resetToken();
                                 playTargetAudio();
                             }
                         }
@@ -812,10 +812,10 @@
         let activeCard = null;
 
         function setupDragAndDropEvents() {
-            const boy = document.getElementById('boy-token');
+            const  = document.getElementById('-token');
 
-            boy.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', 'boy');
+            .addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', '');
             });
 
             boy.addEventListener('touchstart', (e) => {
