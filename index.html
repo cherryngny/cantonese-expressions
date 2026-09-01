@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>廣東話日常表達練習 Cantonese Daily Expressions Practice</title>
+    <!-- canvas-confetti for celebrating round completion -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         :root {
@@ -269,9 +270,9 @@
 
         /* Level 2 Specific Components */
         .level2-picture-box {
-            width: 180px;
-            height: 180px;
-            margin: 0 auto 16px auto;
+            width: 170px;
+            height: 170px;
+            margin: 0 auto 12px auto;
             border: 3px solid #E2E8F0;
             border-radius: 16px;
             padding: 8px;
@@ -296,31 +297,31 @@
         .audio-choice-card {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             background: #F1F5F9;
             border: 2px solid #E2E8F0;
             border-radius: 12px;
-            padding: 10px 14px;
+            padding: 8px 12px;
             transition: all 0.2s;
-        }
-
-        .audio-choice-card.locked {
-            opacity: 0.6;
-            pointer-events: none;
-            background: #E2E8F0;
         }
 
         .play-sub-btn {
             background: white;
             border: 1px solid #CBD5E1;
             border-radius: 50%;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 1.1rem;
             cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .play-sub-btn.played {
+            background: #E0F2FE;
+            border-color: var(--primary);
         }
 
         .select-choice-btn {
@@ -328,18 +329,26 @@
             background: white;
             border: 1px solid #CBD5E1;
             border-radius: 8px;
-            padding: 8px;
-            font-size: 0.95rem;
+            padding: 10px;
+            font-size: 0.9rem;
             font-weight: bold;
             color: var(--text);
             text-align: center;
             cursor: pointer;
+            transition: all 0.2s;
         }
 
         .select-choice-btn:disabled {
             cursor: not-allowed;
-            background: #CBD5E1;
+            background: #E2E8F0;
             color: #64748B;
+            border-color: #CBD5E1;
+        }
+
+        .select-choice-btn.ready {
+            background: #EFF6FF;
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         /* Feedback Modals */
@@ -527,6 +536,7 @@
         <p class="subtitle">Cantonese Daily Expressions Practice</p>
     </header>
 
+    <!-- SETUP SCREEN -->
     <div id="setup-screen" class="card">
         <div class="mode-selector">
             <button id="tab-lvl1" class="mode-tab active" onclick="switchLevel(1)">關卡 1: 拖拽圖片<br>Lvl 1: Drag to Picture</button>
@@ -541,12 +551,14 @@
         <button id="start-btn" class="btn" disabled onclick="startGame()">開始遊戲 Start Round (10 Trials)</button>
     </div>
 
+    <!-- GAMEPLAY SCREEN -->
     <div id="game-screen" class="card hidden">
         <div class="status-bar">
             <span>進度 Trial: <span id="trial-count">1</span> / 10</span>
             <span>目標 Targets: <span id="target-count-info">0</span></span>
         </div>
 
+        <!-- LEVEL 1 CONTAINER -->
         <div id="level1-container">
             <button class="speaker-btn" onclick="playTargetAudio()">
                 🔊 播放語音 Listen Audio
@@ -559,6 +571,7 @@
             <div class="options-grid" id="options-container"></div>
         </div>
 
+        <!-- LEVEL 2 CONTAINER -->
         <div id="level2-container" class="hidden">
             <div class="level2-picture-box">
                 <img id="level2-target-img" src="" alt="Target Expression Picture">
@@ -568,6 +581,7 @@
         </div>
     </div>
 
+    <!-- FEEDBACK OVERLAY -->
     <div id="feedback-modal" class="overlay hidden">
         <div id="feedback-box" class="feedback-box">
             <div id="feedback-title" class="feedback-title"></div>
@@ -578,6 +592,7 @@
         </div>
     </div>
 
+    <!-- SUMMARY SCREEN -->
     <div id="summary-screen" class="card hidden">
         <h2 style="color: var(--secondary); font-size: 1.4rem; margin-top: 0; margin-bottom: 6px;">🎉 完成本輪練習！</h2>
         <p style="font-size: 1.1rem; font-weight: bold; margin-top: 0;">Round Completed!</p>
@@ -627,18 +642,18 @@
 
     <script>
         const ALL_TARGETS = [
-            { id: 'drink_water',   cantonese: '飲水', jyutping: 'jam2 seoi2', english: 'Drink water',          img: 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?w=200&auto=format&fit=crop',   audio: '飲水.mp3' },
-            { id: 'eat_food',      cantonese: '食嘢', jyutping: 'sik6 je5',   english: 'Eating',               img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&auto=format&fit=crop',   audio: '食嘢.mp3' },
-            { id: 'sleep',         cantonese: '瞓覺', jyutping: 'fan3 gaau3', english: 'Sleeping',             img: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=200&auto=format&fit=crop',   audio: '瞓覺.mp3' },
-            { id: 'go_to_school',  cantonese: '返學', jyutping: 'faan1 hok6', english: 'Going to school',      img: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=200&auto=format&fit=crop',   audio: '翻學.mp3' },
-            { id: 'off_school',    cantonese: '放學', jyutping: 'fong3 hok6', english: 'Off from school',      img: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=200&auto=format&fit=crop',   audio: '放學.mp3' },
-            { id: 'carry_bag',     cantonese: '孭書包', jyutping: 'me1 syu1 baau1', english: 'Carrying school bag', img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&auto=format&fit=crop',   audio: '孭書包.mp3' },
-            { id: 'go_toilet',     cantonese: '去廁所', jyutping: 'heoi3 ci3 so2', english: 'Going to toilet',    img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=200&auto=format&fit=crop',   audio: '去廁所.mp3' },
-            { id: 'do_homework',   cantonese: '做功課', jyutping: 'zou6 gung1 fo3', english: 'Doing homework',    img: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=200&auto=format&fit=crop',   audio: '做功課.mp3' },
-            { id: 'queue_up',      cantonese: '排隊', jyutping: 'paai4 deoi2', english: 'Queuing up',          img: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=200&auto=format&fit=crop',   audio: '排隊.mp3' },
-            { id: 'take_bus',      cantonese: '搭巴士', jyutping: 'daap3 baa1 si2', english: 'Taking bus',        img: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=200&auto=format&fit=crop',  audio: '搭巴士.mp3' },
-            { id: 'wear_clothes',  cantonese: '著衫', jyutping: 'zoek3 saam1', english: 'Wearing clothes',     img: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=200&auto=format&fit=crop',  audio: '著衫.mp3' },
-            { id: 'play_toys',     cantonese: '玩玩具', jyutping: 'waan2 wun6 geoi6', english: 'Playing toys', img: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=200&auto=format&fit=crop',  audio: '玩玩具.mp3' }
+            { id: 'drink_water',   cantonese: '飲水', jyutping: 'jam2 seoi2', english: 'Drink water',          img: '1.png',   audio: '飲水.mp3' },
+            { id: 'eat_food',      cantonese: '食嘢', jyutping: 'sik6 je5',   english: 'Eating',               img: '2.png',   audio: '食嘢.mp3' },
+            { id: 'sleep',         cantonese: '瞓覺', jyutping: 'fan3 gaau3', english: 'Sleeping',             img: '3.png',   audio: '瞓覺.mp3' },
+            { id: 'go_to_school',  cantonese: '返學', jyutping: 'faan1 hok6', english: 'Going to school',      img: '4.png',   audio: '翻學.mp3' },
+            { id: 'off_school',    cantonese: '放學', jyutping: 'fong3 hok6', english: 'Off from school',      img: '5.png',   audio: '放學.mp3' },
+            { id: 'carry_bag',     cantonese: '孭書包', jyutping: 'me1 syu1 baau1', english: 'Carrying school bag', img: '6.png',   audio: '孭書包.mp3' },
+            { id: 'go_toilet',     cantonese: '去廁所', jyutping: 'heoi3 ci3 so2', english: 'Going to toilet',    img: '7.png',   audio: '去廁所.mp3' },
+            { id: 'do_homework',   cantonese: '做功課', jyutping: 'zou6 gung1 fo3', english: 'Doing homework',    img: '8.png',   audio: '做功課.mp3' },
+            { id: 'queue_up',      cantonese: '排隊', jyutping: 'paai4 deoi2', english: 'Queuing up',          img: '9.png',   audio: '排隊.mp3' },
+            { id: 'take_bus',      cantonese: '搭巴士', jyutping: 'daap3 baa1 si2', english: 'Taking bus',        img: '10.png',  audio: '搭巴士.mp3' },
+            { id: 'wear_clothes',  cantonese: '著衫', jyutping: 'zoek3 saam1', english: 'Wearing clothes',     img: '11.png',  audio: '著衫.mp3' },
+            { id: 'play_toys',     cantonese: '玩玩具', jyutping: 'waan2 wun6 geoi6', english: 'Playing toys', img: '12.png',  audio: '玩玩具.mp3' }
         ];
 
         // Synthesizer Audio Effects
@@ -690,7 +705,6 @@
             }
             audio.play().catch(e => {
                 console.log(`[Audio Playing]: ${audioFilename}`);
-                // Fallback timeout simulation if audio missing/blocked
                 if (typeof onEndedCallback === 'function') {
                     setTimeout(onEndedCallback, 1000);
                 }
@@ -706,6 +720,9 @@
         let currentOptions = [];
         let attemptCount = 0;
         let pendingAction = null;
+
+        // Level 2 All-Audio Completion System State
+        let playedAudioTracker = [false, false, false];
 
         // Tracker Data
         let trialStartTime = 0;
@@ -811,6 +828,7 @@
                 const shuffledDistractors = shuffleArray(distractorPool).slice(0, 2);
                 currentOptions = shuffleArray([currentTarget, ...shuffledDistractors]);
 
+                playedAudioTracker = [false, false, false];
                 renderAudioChoices();
             }
         }
@@ -830,7 +848,6 @@
             });
         }
 
-        /* --- Level 2 with Mandatory Audio Playback System --- */
         function renderAudioChoices() {
             const container = document.getElementById('audio-choices-container');
             container.innerHTML = '';
@@ -843,23 +860,22 @@
                 choiceCard.innerHTML = `
                     <button class="play-sub-btn" id="play-btn-${idx}">🔊</button>
                     <button class="select-choice-btn" id="select-btn-${idx}" disabled>
-                        播放語音以解鎖 (Listen to unlock)
+                        聽完所有 3 個選項才可選擇 (Listen 0/3)
                     </button>
                 `;
 
-                // Set Audio Player Lock handler
                 const playBtn = choiceCard.querySelector(`#play-btn-${idx}`);
                 const selectBtn = choiceCard.querySelector(`#select-btn-${idx}`);
 
                 playBtn.onclick = (e) => {
                     e.stopPropagation();
-                    selectBtn.innerText = '🔊 播放中 Playing...';
-                    selectBtn.disabled = true;
+                    setAllPlayButtonsDisabled(true);
 
                     playAudioFile(option.audio, () => {
-                        selectBtn.disabled = false;
-                        selectBtn.innerText = `選擇 語音 Option ${idx + 1}`;
-                        choiceCard.classList.remove('locked');
+                        playedAudioTracker[idx] = true;
+                        playBtn.classList.add('played');
+                        setAllPlayButtonsDisabled(false);
+                        updateLevel2SelectionState();
                     });
                 };
 
@@ -871,6 +887,35 @@
 
                 container.appendChild(choiceCard);
             });
+
+            updateLevel2SelectionState();
+        }
+
+        function setAllPlayButtonsDisabled(disabled) {
+            for (let i = 0; i < 3; i++) {
+                const btn = document.getElementById(`play-btn-${i}`);
+                if (btn) btn.disabled = disabled;
+            }
+        }
+
+        function updateLevel2SelectionState() {
+            const playedCount = playedAudioTracker.filter(Boolean).length;
+            const allPlayed = playedCount === 3;
+
+            for (let i = 0; i < 3; i++) {
+                const selectBtn = document.getElementById(`select-btn-${i}`);
+                if (!selectBtn) continue;
+
+                if (allPlayed) {
+                    selectBtn.disabled = false;
+                    selectBtn.classList.add('ready');
+                    selectBtn.innerText = `選擇 選項 ${i + 1} (Select Option ${i + 1})`;
+                } else {
+                    selectBtn.disabled = true;
+                    selectBtn.classList.remove('ready');
+                    selectBtn.innerText = `請先聽完所有 3 個選項 (${playedCount}/3) Listen all options`;
+                }
+            }
         }
 
         function resetBoyToken() {
